@@ -15,7 +15,7 @@ export async function createTrip(app: FastifyInstance) {
                 starts_at: z.coerce.date(),
                 ends_at: z.coerce.date(),
                 owner_name: z.string(),
-                owner_email: z.string().email()
+                owner_email: z.string().email(),
             })
         }
     }, async (request) => {
@@ -33,13 +33,21 @@ export async function createTrip(app: FastifyInstance) {
             data: {
                 destination,
                 starts_at,
-                ends_at
+                ends_at,
+                participants: {
+                    create: {
+                        name: owner_name,
+                        email: owner_email,
+                        is_owner: true,
+                        is_confirmed: true
+                    }
+                }
             }
         });
 
         const mail = await getMailClient();
 
-        const message =await mail.sendMail({
+        const message = await mail.sendMail({
             from: {
                 name: 'Equipe planner',
                 address: 'oi@planner'
@@ -53,7 +61,7 @@ export async function createTrip(app: FastifyInstance) {
         });
 
         console.log(nodemailer.getTestMessageUrl(message))
-  
+
         return { tripId: trip.id }
     })
 };
