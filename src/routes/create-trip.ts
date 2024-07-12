@@ -3,8 +3,13 @@ import { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from 'zod';
 import { prisma } from "../lib/prisma";
 import dayjs from "dayjs";
+import 'dayjs/locale/pt-br';
+import localizedFormat from "dayjs/plugin/localizedFormat";
 import { getMailClient } from "../lib/mail";
 import nodemailer from 'nodemailer';
+
+dayjs.locale('pt-br');
+dayjs.extend(localizedFormat);
 
 
 export async function createTrip(app: FastifyInstance) {
@@ -54,6 +59,9 @@ export async function createTrip(app: FastifyInstance) {
             }
         });
 
+        const formatedStartDate = dayjs(starts_at).format('LL');
+        const formatedEndDate = dayjs(ends_at).format('LL');
+        
         const mail = await getMailClient();
 
         const message = await mail.sendMail({
@@ -66,7 +74,17 @@ export async function createTrip(app: FastifyInstance) {
                 address: owner_email
             },
             subject: `Confirme sua viagem para ${destination}`,
-            html: ``.trim()
+            html: `<div>
+                    <p>Você solicitou a criação de uma viagem para <strong>${destination}</strong> nas datas de <strong>${formatedStartDate} até ${formatedEndDate}</strong>.</p>
+                    <br/>
+                    <p>Para confirmar sua viagem, clique no link abaixoÇ</p>
+                    <br/>
+                    <p>
+                        <a href="">Confirmar viagem</a>
+                    </p>
+                    <br/>
+                    <p>Caso você não saiba do que se trata esse e-mail, apenas ignore-o</p>
+                </div>`.trim()
         });
 
         console.log(nodemailer.getTestMessageUrl(message))
